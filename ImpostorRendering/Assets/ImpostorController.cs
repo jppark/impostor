@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+
 public class ImpostorController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
 	}
 	
 	// Update is called once per frame
