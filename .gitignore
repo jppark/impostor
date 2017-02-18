@@ -1,0 +1,52 @@
+# Unity generated
+# (note that Library can be a junction!)
+
+[Bb]uild/
+[Oo]bj/
+[Tt]emp/
+[Ll]ibrary
+UnityGenerated/
+sysinfo.txt
+
+Projectsettings/QualitySettings.asset
+
+# Visual Studio/MonoDevelop/XCode generated
+
+*.booproj
+/*.csproj
+*.DotSettings
+*.opensdf
+*.pdb
+*.pdb.meta
+*.pidb
+*.sdf
+/*.sln
+*.suo
+*.svd
+*.unityproj
+*.user
+*.userprefs
+Assets/UnityVS*
+DerivedData/
+ExportedObj/
+Debug/
+ipch/
+Release/
+.vs
+UpgradeLog.htm
+
+.sass-cache/
+
+# OS generated
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db.meta
+
+# Icon must end with two \r
+.Icon?
