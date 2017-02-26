@@ -4,7 +4,7 @@
 # Part 1 - Realtime Impostor
 
 ## Goal : Realtime generation and rendering of Impostor texture
-![](images/impostor_single.png)
+![](./images/impostor_single.PNG)
 
 Dynamically generates impostor textures from given mesh object(Skateboard). 
 The impostor texture is updated due to relative movement of impostor target object from the viewing camera.
