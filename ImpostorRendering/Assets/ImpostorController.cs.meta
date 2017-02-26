@@ -1,10 +1,14 @@
 fileFormatVersion: 2
 guid: 4fc35a2e20708b94182e6e44a9806854
-timeCreated: 1487204616
-licenseType: Pro
+timeCreated: 1487777694
+licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - skaterboardObj: {instanceID: 0}
+  - m_texBuffer: {fileID: 8400000, guid: 05c6df0149119d94c9d1d3fab26a07a3, type: 2}
+  - FPSCamera: {instanceID: 0}
+  - m_textureCam: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

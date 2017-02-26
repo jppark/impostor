@@ -82,12 +82,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\ImpostorController.cs" />
+    <Compile Include="Assets\MultiImpostorController.cs" />
+    <Compile Include="Assets\PrintoutImpostorTexture.cs" />
     <Compile Include="Assets\SampleScenes\Scripts\CameraSwitch.cs" />
     <Compile Include="Assets\SampleScenes\Scripts\LevelReset.cs" />
     <Compile Include="Assets\SampleScenes\Scripts\PlaceTargetWithMouse.cs" />
     <Compile Include="Assets\SampleScenes\Scripts\SlowMoButton.cs" />
+    <Compile Include="Assets\TextureManager.cs" />
+    <Compile Include="Assets\UtilFun.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\AlphaShader.shader" />
     <None Include="Assets\SampleScenes\Shaders\Skybox-Procedural.shader" />
     <None Include="Assets\Standard Assets\Cameras\CameraGuidelines.txt" />
     <None Include="Assets\Standard Assets\Characters\FirstPersonCharacter\FirstPersonCharacterGuidelines.txt" />
