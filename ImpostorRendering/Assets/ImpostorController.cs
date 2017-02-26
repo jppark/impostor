@@ -56,14 +56,10 @@ public class ImpostorController : MonoBehaviour {
         /// GameObject Access
         if(targetObj==null)
             targetObj = GameObject.Find("Skateboard");
-        mainCam = Camera.allCameras[0];                     // Get Camera
-
+        mainCam = Camera.allCameras[0];                     // Get Camera from static camera array
         /// Assign Texture Manager
         tm = new TextureManager(m_textureSize, m_targetRenderLayer, ref mainCam);
         GetComponent<Renderer>().material.mainTexture = tm.GetTexture();
-        tm.GetTexture().useMipMap = true;
-        tm.GetTexture().autoGenerateMips = true;
-
     }
     private void Init()
     {
