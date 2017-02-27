@@ -25,7 +25,7 @@ Target object which is to be rendered with the impostor is initially set to the 
 
 ## Usage
 1. Create Quad object to be rendered with impostor
-2. Link the _ImpostorController.cs_ script to the quad object
+2. Link the _ImpostorController.cs_ script to the quad object. (If you don't want to many objects, disable _"MultiImposer"_ class.
 3. Set the parameter and excute
 
 ## Issues
@@ -66,15 +66,15 @@ Uniform : uniformly positioned / Random2D : randomly positioned in ground plane 
 
 ## Usage
 
-* Texture Generation : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location.
 * Massive Object Rendering : Input the number of objects to rendered in _Object Number_ at _MultiImpostorController_ script and
 choose the positioning method among the Uniform/Random2D/Random3D
 * Additional Enhancement will be work with turning on the _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_
   _Adaptive Resolution_ is not applied in runtime(which related to texture assign)
+* Texture Generation : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location. Please beware that the pre-generation of impostor rendering requires much time.
 
 ## Issues
 * Enhancement Efficiency : _Adaptive Resolution_ enhance efficiency significantly and _View Angle Update_ increases performance of impostor rendering. However, _Frustum Culling_ does not shows distinct difference in framerate. That's because unity3D engine does culling algorithm by itself and manual culling does not effects well. 
-* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _1.0_, but it can be increased when you want to get more performance.
+* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _1.0_, but it can be increased when you want to get more performance. Reducing popping artifacts with improvement of performance can be archieved by applying additional data structure(e.g. Octree, k-d tree), but it is not applied by now. 
 
     
 ## Acknowledgements
