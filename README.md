@@ -9,7 +9,7 @@
 Dynamically generates impostor textures from given mesh object(Skateboard). 
 The impostor texture is updated due to relative movement of impostor target object from the viewing camera.
 
-Impostor mesh is not updated when the camera viewing angle to the impostor does not exceed the defined threshold.
+Impostor mesh is not updated when the camera viewing angle to the impostor does not exceed the defined threshold(Angle Threshold).
 Original threshold is set to 0.02. As the threshold is increased, the impostor does not be updated frequently and cause some artifacts which comes from angle difference between the camera angle of current view and camera angle of render texture.
 
 Target object which is to be rendered with the impostor is initially set to the Skateboard object, but you can change the target object using parameter box of Inspector or source code of _ImpostorController.cs_.
@@ -25,7 +25,7 @@ Target object which is to be rendered with the impostor is initially set to the 
 
 ## Usage
 1. Create Quad object to be rendered with impostor
-2. Link to the _ImpostorController.cs_ script to the quad object
+2. Link the _ImpostorController.cs_ script to the quad object
 3. Set the parameter and excute
 
 ## Issues
@@ -41,41 +41,44 @@ Additional methods for performance enhancement are applied and test the result o
 
 ## Enhancement Algorithm
 Rendering performance enhancement is performed while only rendering necessary impostor and using pre-rendered impostor cache. Detailed policy applied is as below.
-1. Adaptive Resolution : In rendering massive objects, far objects from view position does not requires high-resolutional impostor texture. With calculation of viewing angle from view point, the impostor texture resolution in far object is reduced. This operation does not support dynamic resolution change since resizing _RenderTexture_ in Unity Engine requires additional performance burden.
-2. Angle Threshold : The same method which is applied to previous single impostor.
-3. Frustum Culling : Check if the certain impostor are in the camera frustum and if not, does not update runtime.
-4. Caching : Loads pre-generated texture and use for the impostor rendering instead of dynamically rendering online.
+
+* Adaptive Resolution : In rendering massive objects, far objects from view position does not requires high-resolutional impostor texture. With calculation of viewing angle from view point, the impostor texture resolution in far object is reduced. This operation does not support dynamic resolution change since dynamic resizing of _RenderTexture_ in Unity Engine requires additional performance burden.
+* Angle Threshold : The same method which is applied to previous single impostor.
+* Frustum Culling : Check if the certain impostor are in the camera frustum and if not, do not update the impostor runtime.
+* Pre-rendered Texture Caching : Loads pre-generated texture and use for the impostor rendering instead of dynamically rendering online.
 
 ## Parameters
 * Target Obj : A mesh object to be rendered with impostor. Default value is the _Skateboard_ object.
 * Adaptive Resolution : Turn on/off adaptive resolution method. This method only effect when the program start.
 * View Angle Update : View angle threshold method for selective update of impostor.
-* Use Cache : Caching method
+* Use Cache : loading a pre-rendered texture image and texture mapping instead of dynamic generation.
 * Falling Object : Check if the massive objects are falling or not.
 * Angle Threshold(float) : Threshold for selective update.
+* Cache Angle Threhold : Threshold for texture cache. 
 * Object Number : The number of objects to be rendered with impostor
 * Positioning Method : The way of massive objects positioning. 
 Uniform : uniformly positioned / Random2D : randomly positioned in ground plane / Random3D : randomly positioned in 3D space
 
 ## Files Included : 
-* MultiImpostorController.cs : Main Controller class which assigns Multiple TextureManager and update camera position
+* MultiImpostorController.cs : Impostor Controller Class which assigns Multiple TextureManager and update camera position
 * UtilFun.cs : Function implementation for additional utility function
 * PrintoutImpostorTexture.cs : Pre-generate cache texture for impostor
 
 ## Usage
 
-* Texture Generation : Turn on the _"Printout Texture"_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object.
+* Texture Generation : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location.
 * Massive Object Rendering : Input the number of objects to rendered in _Object Number_ at _MultiImpostorController_ script and
 choose the positioning method among the Uniform/Random2D/Random3D
-Additional Enhancement will be work with turning on the _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_ 
+* Additional Enhancement will be work with turning on the _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_
+  _Adaptive Resolution_ is not applied in runtime(which related to texture assign)
 
 ## Issues
-* Enhancement Efficiency : _Adaptive Resolution_ works well and _View Angle Update_ increases performance of impostor rendering.
-_Frustum Culling_ does not shows distinct difference in framerate. That's because unity3D engine does culling algorithm by itself and manual culling does not effects significantly. 
+* Enhancement Efficiency : _Adaptive Resolution_ enhance efficiency significantly and _View Angle Update_ increases performance of impostor rendering. However, _Frustum Culling_ does not shows distinct difference in framerate. That's because unity3D engine does culling algorithm by itself and manual culling does not effects well. 
+* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _1.0_, but it can be increased when you want to get more performance.
 
     
 ## Acknowledgements
 * Scene Files from AltspaceVR 
 
 ## Contact
-Source code and scene file from Jong Pil Park(jpster99@gmail.com)
+All the source code are from Jong Pil Park(jpster99@gmail.com)

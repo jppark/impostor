@@ -7,9 +7,8 @@ public class PrintoutImpostorTexture : MonoBehaviour {
     private GameObject targetObj;
     private Camera mainCam;
 
-    private float m_cacheAngleRes = 20.0f;
-    private float m_cacheXAngle = 40.0f;
-    private float m_cacheYAngle = 40.0f;
+    private float m_cacheAngleRes = 5.0f;
+    private float m_cacheAngle = 40.0f;
     private int m_row;
     private int m_column;
     private int m_rendertexSize;
@@ -38,8 +37,8 @@ public class PrintoutImpostorTexture : MonoBehaviour {
         impostorTexCache = new List<List<Texture2D>>();
 
         m_rendertexSize = 512;
-        m_row = (int)(m_cacheXAngle*2 / m_cacheAngleRes) +1;
-        m_column = (int)(m_cacheYAngle*2 / m_cacheAngleRes) + 1;
+        m_row = (int)(m_cacheAngle*2 / m_cacheAngleRes) +1;
+        m_column = (int)(m_cacheAngle * 2 / m_cacheAngleRes) + 1;
     }
     private void GenerateCaching()
     {
@@ -47,11 +46,11 @@ public class PrintoutImpostorTexture : MonoBehaviour {
         Vector3 viewDir = new Vector3(0.0f, 0.0f, -1.0f);
         TextureManager virtualtm = new TextureManager(m_rendertexSize, 8, ref mainCam);
         int i = 0, j = 0;
-        for (float x_angle = -m_cacheXAngle; x_angle <= m_cacheXAngle; x_angle += m_cacheAngleRes)
+        for (float x_angle = -m_cacheAngle; x_angle <= m_cacheAngle; x_angle += m_cacheAngleRes)
         {
             j = 0;
             impostorTexCache.Add(new List<Texture2D>());
-            for (float y_angle = -m_cacheYAngle; y_angle <= m_cacheYAngle; y_angle += m_cacheAngleRes)
+            for (float y_angle = -m_cacheAngle; y_angle <= m_cacheAngle; y_angle += m_cacheAngleRes)
             {
                 Vector3 curDir = Quaternion.Euler(x_angle, y_angle, 0.0f) * viewDir;
                 virtualtm.UpdateTexCam(targetObj.transform.position + curDir.normalized*1.0f, targetObj.transform);
@@ -64,7 +63,7 @@ public class PrintoutImpostorTexture : MonoBehaviour {
                 j++;
             }
             i++;
-            Debug.Log("Calculating : "+i+"/ "+ ((m_cacheXAngle*2/ m_cacheAngleRes)+1) );
+            Debug.Log("Calculating : "+i+"/ "+ ((m_cacheAngle*2/ m_cacheAngleRes)+1) );
         }
         Debug.Log("Calculated Cache Files");
     }
