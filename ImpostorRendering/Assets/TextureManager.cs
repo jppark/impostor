@@ -13,7 +13,7 @@ public class TextureManager {
     {
         GameObject tgo = new GameObject("Texture Caching Camera");
         m_textureCam = tgo.AddComponent<Camera>();
-        m_texBuffer = new RenderTexture(_size, _size, 0, RenderTextureFormat.ARGB32);
+        m_texBuffer = new RenderTexture(_size, _size, 16, RenderTextureFormat.ARGB32);
         m_texBuffer.antiAliasing = 1;
 
         m_textureCam.nearClipPlane = _refCam.GetComponent<Camera>().nearClipPlane;
