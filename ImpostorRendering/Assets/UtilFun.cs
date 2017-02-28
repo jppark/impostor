@@ -2,6 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+enum positioning
+{
+    Uniform, Random2D, Random3D
+};
+public static class TextureCacheInfo
+{
+    public static int textureSize = 400;
+    public static float cacheAngleScope = 40.0f;
+    public static float cacheAngleRes = 4.0f;
+}
+
 public class UtilFun {
     public static float CalculateViewAngle( float _dist, float _size)
     {
@@ -30,3 +41,4 @@ public class UtilFun {
         return GeometryUtility.TestPlanesAABB(planes, Renderable.bounds);
     }
 }
+

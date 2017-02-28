@@ -43,7 +43,7 @@ Additional methods for performance enhancement are applied and test the result o
 Rendering performance enhancement is performed while only rendering necessary impostor and using pre-rendered impostor cache. Detailed policy applied is as below.
 
 * Adaptive Resolution : In rendering massive objects, far objects from view position does not requires high-resolutional impostor texture. With calculation of viewing angle from view point, the impostor texture resolution in far object is reduced. This operation does not support dynamic resolution change since dynamic resizing of _RenderTexture_ in Unity Engine requires additional performance burden.
-* Angle Threshold : The same method which is applied to previous single impostor.
+* Angle Threshold : The same method which is applied to previous single impostor. Skip impostor rendering update when movement of view position is lower than the threshold.
 * Frustum Culling : Check if the certain impostor are in the camera frustum and if not, do not update the impostor runtime.
 * Pre-rendered Texture Caching : Loads pre-generated texture and use for the impostor rendering instead of dynamically rendering online.
 
@@ -66,16 +66,17 @@ Uniform : uniformly positioned / Random2D : randomly positioned in ground plane 
 
 ## Usage
 
-* Massive Object Rendering : Input the number of objects to rendered in _Object Number_ at _MultiImpostorController_ script and
+1. Texture Generation_(Optional)_ : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location. Please beware that the pre-generation of impostor rendering requires much time.
+2. Massive Object Rendering : Input the number of objects to rendered in _Object Number_ at _MultiImpostorController_ script and
 choose the positioning method among the Uniform/Random2D/Random3D
-* Additional Enhancement will be work with turning on the _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_
+3. Select additional enhancement for the performance and excute it
+* Enhancement Feature : _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_
   _Adaptive Resolution_ is not applied in runtime(which related to texture assign)
-* Texture Generation : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location. Please beware that the pre-generation of impostor rendering requires much time.
+
 
 ## Issues
 * Enhancement Efficiency : _Adaptive Resolution_ enhance efficiency significantly and _View Angle Update_ increases performance of impostor rendering. However, _Frustum Culling_ does not shows distinct difference in framerate. That's because unity3D engine does culling algorithm by itself and manual culling does not effects well. 
-* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _1.0_, but it can be increased when you want to get more performance. Reducing popping artifacts with improvement of performance can be archieved by applying additional data structure(e.g. Octree, k-d tree), but it is not applied by now. 
-
+* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _3.0_, but it can be increased when you want to get more performance.
     
 ## Acknowledgements
 * Scene Files from AltspaceVR 

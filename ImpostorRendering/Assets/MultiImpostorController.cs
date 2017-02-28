@@ -4,29 +4,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-enum positioning
-{
-    Uniform, Random2D, Random3D 
-};
 public class MultiImpostorController : MonoBehaviour {
     private const float INF = 987654321.0f;
 
-    private List<TextureManager> tmList;
-    private List<GameObject> impostorObjList;
-    //private List<List<Texture2D>> impostorCacheTexList;
+    private List<TextureManager> m_tmList;
+    private List<GameObject> m_impostorObjList;
     private Camera mainCam;
 
+    private Texture2D m_cachedTex;
     private List<Vector3> m_currCamDir;
     private List<Vector3> m_prevCamDir;
+    private List<float> m_cacheAngleBorder;
     private Vector3 m_startingPos = new Vector3(-21.83f, 2.8f, 21.8f);
     private Vector3 m_endPos = new Vector3(33.68f, 2.8f, 21.8f);
-    private List<bool> m_bDrawCache;
-    private Texture2D m_cachedTex;
-    private float m_cacheAngleRes = 5.0f;
-    private float m_cacheAngleMargin = 40.0f;
- 
-    private int m_targetRenderLayer = 8;
-    private int m_rendertexSize = 512;
     private int m_slice;
 
     [SerializeField]    private GameObject targetObj;
@@ -40,6 +30,9 @@ public class MultiImpostorController : MonoBehaviour {
     [SerializeField]    private int m_ObjectNumber = 300;
     [SerializeField]    private positioning m_PositioningMethod = positioning.Uniform; // Uniform / Random / Random Space
 
+    /// <summary>
+    /// Default Functions
+    /// </summary>
     public MultiImpostorController()
     {
     }
@@ -47,6 +40,7 @@ public class MultiImpostorController : MonoBehaviour {
     void Awake()
     {
         Assign();
+        Debug.Log(TextureCacheInfo.textureSize);
     }
     void Start () {
         Init();
@@ -54,6 +48,7 @@ public class MultiImpostorController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         SelectiveUpdate();
+        FallingObjects();
         if (Input.GetKeyDown(KeyCode.Alpha1))
             m_AdaptiveResolution = !m_AdaptiveResolution;
         if (Input.GetKeyDown(KeyCode.Alpha2))
@@ -62,32 +57,32 @@ public class MultiImpostorController : MonoBehaviour {
             m_FrustumCulling = !m_FrustumCulling;
     }
 
-///
-/// Member Function
-/// 
-private void Assign()
+    ///
+    /// Member Functions
+    /// 
+    /// Load/Assign Functions
+    private void Assign()
     {
         /// Rendering Switch setting
         if(m_UseCache)
         {
+            // when caching is applied, Adaptive Resolution is turned off
             m_AdaptiveResolution = false;
-            m_ViewAngleUpdate = false;
             LoadCacheTex();
         }
         /// GameObject Access
         if (targetObj==null)
             targetObj = GameObject.Find("Skateboard");
         mainCam = Camera.allCameras[0];                     // Get Camera from static camera array
-        /// Assign Texture Manager
-        tmList = new List<TextureManager>();
-        impostorObjList = new List<GameObject>();
-        /// Create Multiple Object
-        List<Vector3> positionVec3 = new List<Vector3>();
+
+        m_tmList = new List<TextureManager>();
+        m_impostorObjList = new List<GameObject>();
         m_currCamDir = new List<Vector3>();
         m_prevCamDir = new List<Vector3>();
-        m_bDrawCache = new List<bool>();
+        List<Vector3> positionVec3 = new List<Vector3>();
+
         GeneratePosition(m_ObjectNumber, m_PositioningMethod, ref positionVec3);
-        
+
         for (int i = 0; i < m_ObjectNumber; i++)
         {
             /// TextureManager List assign
@@ -96,166 +91,117 @@ private void Assign()
                 /// If Adaptive Resolution switch is on, calculate texture resolution due to distance
                 float dist = (positionVec3[i] - mainCam.transform.position).magnitude;
                 int tsize = UtilFun.CalculateOptimalResolution(dist, 3, 0.1f);
-                tmList.Add(new TextureManager(tsize, m_targetRenderLayer, ref mainCam));
+                m_tmList.Add(new TextureManager(tsize, ref mainCam, targetObj.layer));
             }
             else
-                tmList.Add(new TextureManager(m_rendertexSize, m_targetRenderLayer, ref mainCam));
+                m_tmList.Add(new TextureManager(TextureCacheInfo.textureSize, ref mainCam, targetObj.layer));
 
-            impostorObjList.Add(new GameObject("MultiImp " + i.ToString()));
-            impostorObjList[i] = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            impostorObjList[i].transform.position = positionVec3[i];
-            ImpostorObjPropertySetting(i);
-            m_bDrawCache.Add(new bool() );
-            m_bDrawCache[i] = false;
+            m_impostorObjList.Add(new GameObject("Multi Impost :" + i.ToString()));
+            m_impostorObjList[i] = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            m_impostorObjList[i].transform.position = positionVec3[i];
+            SetObjPropertyToImpostor(i);
         }
     }
     private void Init()
     {
         /// Initialize Parameter
-        for (int i = 0; i < tmList.Count; i++)
+        for (int i = 0; i < m_tmList.Count; i++)
         {
             m_currCamDir.Add(new Vector3(0.0f, 0.0f, 0.0f));
-            m_currCamDir[i] = mainCam.transform.position - impostorObjList[i].transform.position;
+            m_currCamDir[i] = mainCam.transform.position - m_impostorObjList[i].transform.position;
             m_prevCamDir.Add(new Vector3(0.0f, 0.0f, 0.0f));
             m_prevCamDir[i] = m_currCamDir[i];
             RenderUpdate(i);
         }
     }
-    private void ImpostorObjPropertySetting(int i)
-    {
-        /// Assign Impostor Game Objects
-        Shader alphaShader = Shader.Find("Imposter/Transparent");
-        impostorObjList[i].GetComponent<Renderer>().sharedMaterial.shader = alphaShader;
-        impostorObjList[i].GetComponent<MeshRenderer>().material.mainTexture = tmList[i].GetTexture();
-        impostorObjList[i].GetComponent<MeshRenderer>().material.mainTextureOffset = new Vector2(0.0f, 0.0f);
-        impostorObjList[i].GetComponent<MeshRenderer>().material.mainTextureScale = new Vector2(1.0f, 1.0f); ;
-        impostorObjList[i].GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        impostorObjList[i].GetComponent<MeshRenderer>().enabled = true;
-        impostorObjList[i].transform.localScale = new Vector3(3, 3, 0.001f);
-    }
     private void LoadCacheTex()
     {
         /// Load Cache Texture
-        m_rendertexSize = 512;
-        m_slice = (int)(m_cacheAngleMargin * 2 / m_cacheAngleRes) + 1;
-        m_cachedTex = new Texture2D(m_rendertexSize* m_slice, m_rendertexSize* m_slice, TextureFormat.ARGB32, true);
+        m_slice = (int)(TextureCacheInfo.cacheAngleScope * 2 / TextureCacheInfo.cacheAngleRes) + 1;
+        m_cachedTex = new Texture2D(TextureCacheInfo.textureSize * m_slice, TextureCacheInfo.textureSize * m_slice, TextureFormat.ARGB32, true);
         String m_FileName = "impostorCacheTex.png";
         byte[] fileData = File.ReadAllBytes(Application.dataPath + "/../" + m_FileName);
         m_cachedTex.LoadImage(fileData);
+        m_cacheAngleBorder = new List<float>();
+        /// set up cache borders
+        for (float x_b = -TextureCacheInfo.cacheAngleScope; x_b <= TextureCacheInfo.cacheAngleScope; x_b += TextureCacheInfo.cacheAngleRes)
+            m_cacheAngleBorder.Add(x_b);
         Debug.Log(m_cachedTex.ToString());
+    }
+    private void SetObjPropertyToImpostor(int i)
+    {
+        /// Assign Impostor Game Objects
+        Shader alphaShader = Shader.Find("Imposter/Transparent");
+        m_impostorObjList[i].GetComponent<Renderer>().sharedMaterial.shader = alphaShader;
+        m_impostorObjList[i].GetComponent<MeshRenderer>().material.mainTexture = m_tmList[i].GetTexture();
+        m_impostorObjList[i].GetComponent<MeshRenderer>().material.mainTextureOffset = new Vector2(0.0f, 0.0f);
+        m_impostorObjList[i].GetComponent<MeshRenderer>().material.mainTextureScale = new Vector2(1.0f, 1.0f); ;
+        m_impostorObjList[i].GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        m_impostorObjList[i].GetComponent<MeshRenderer>().enabled = true;
+        m_impostorObjList[i].transform.localScale = new Vector3(3, 3, 0.001f);
+    }
+    private void SetObjPropertyToTexCache(int i, int i_cache, int j_cache)
+    {
+        m_impostorObjList[i].GetComponent<Renderer>().sharedMaterial.mainTexture = m_cachedTex;
+        m_impostorObjList[i].GetComponent<Renderer>().sharedMaterial.mainTextureOffset = new Vector2(1.0f / m_slice * (float)i_cache, 1.0f / m_slice * (float)j_cache);
+        m_impostorObjList[i].GetComponent<Renderer>().sharedMaterial.mainTextureScale = new Vector2(1.0f / m_slice, 1.0f / m_slice);
     }
     private bool SelectiveUpdate()
     {
-        /// Select object due to View angle difference / Visiblity
-        if (m_FallingObject)
-        {
-            for (int i = 0; i < impostorObjList.Count; i++)
-            {
-                impostorObjList[i].transform.Translate(0.0f, -0.1f, 0.0f);
-                if (impostorObjList[i].transform.position.y < 2.8f)
-                    impostorObjList[i].transform.position = new Vector3(impostorObjList[i].transform.position.x, 10.0f, impostorObjList[i].transform.position.z);
-            }
-        }
-        int count = 0;
+        /// Select object due to View angle difference / Visibility
         /// Determine rendering update due to direction change
-        if (!m_ViewAngleUpdate)
+        for (int i = 0; i < m_tmList.Count; i++)
         {
-            for (int i = 0; i < tmList.Count; i++)
-            {
-                if (!m_FrustumCulling)
-                    RenderUpdate(i);
-                else if (IsInFrustum(i))
-                {
-                    RenderUpdate(i);
-                    count++;
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < impostorObjList.Count; i++)
-            {
-                m_currCamDir[i] = mainCam.transform.position - impostorObjList[i].transform.position;
-                if (Vector3.Angle(m_currCamDir[i].normalized, m_prevCamDir[i].normalized) > m_angleThrehold)
-                {
-                    m_prevCamDir[i] = m_currCamDir[i];
-                    if (!m_FrustumCulling)
-                        RenderUpdate(i);
-                    else if (IsInFrustum(i))
-                    {
-                        RenderUpdate(i);
-                        count++;
-                    }
-                }
-            }
+            if (m_ViewAngleUpdate && m_FrustumCulling && IsAngleChanged(i) && IsInFrustum(i))
+                RenderUpdate(i);
+            else if (!m_ViewAngleUpdate && m_FrustumCulling && IsInFrustum(i))
+                RenderUpdate(i);
+            else if (m_ViewAngleUpdate && !m_FrustumCulling && IsAngleChanged(i))
+                RenderUpdate(i);
+            else
+                RenderUpdate(i);
         }
         return false;
     }
     private void RenderUpdate(int i)
     {
         /// select target obj and rendering update
-        Vector3 pos = targetObj.transform.position + (mainCam.transform.position - impostorObjList[i].transform.position).normalized;
-        Vector3 dir = (mainCam.transform.position - impostorObjList[i].transform.position).normalized;
+        Vector3 viewDir = (mainCam.transform.position - m_impostorObjList[i].transform.position).normalized;
         /// determine for using cache or not
         int i_cache=0, j_cache=0;
-        if (m_UseCache && IsHitCacheTex(dir, ref i_cache, ref j_cache))
+        if (m_UseCache && IsHitCacheTex(viewDir, ref i_cache, ref j_cache))
         {
-            impostorObjList[i].GetComponent<Renderer>().sharedMaterial.mainTexture = m_cachedTex;
-            impostorObjList[i].GetComponent<Renderer>().sharedMaterial.mainTextureOffset = new Vector2(1.0f / m_slice * (float)i_cache, 1.0f / m_slice * (float)j_cache);
-            impostorObjList[i].GetComponent<Renderer>().sharedMaterial.mainTextureScale = new Vector2(1.0f / m_slice, 1.0f / m_slice);
-            m_bDrawCache[i] = true;
+            // Use texture cache
+            SetObjPropertyToTexCache(i, i_cache, j_cache);
+            m_tmList[i].switchRenderedWithCache();
         }
         else
         {
-            impostorObjList[i].GetComponent<MeshRenderer>().material.mainTexture = tmList[i].GetTexture();
-            tmList[i].UpdateTexCam(pos, targetObj.transform);
-            if(m_bDrawCache[i])
-                ImpostorObjPropertySetting(i);
-            m_bDrawCache[i] = false;
+            // change to dynamic impostor
+            m_impostorObjList[i].GetComponent<MeshRenderer>().material.mainTexture = m_tmList[i].GetTexture();
+            Vector3 pos = targetObj.transform.position + viewDir;
+            m_tmList[i].UpdateTexCam(pos, targetObj.transform);
+            //if(m_tmList[i].IsRenderedWithCache() )
+            SetObjPropertyToImpostor(i);
+            m_tmList[i].switchRenderedWithCache();
         }
-
-        impostorObjList[i].transform.LookAt(mainCam.transform);
-        impostorObjList[i].transform.Rotate(new Vector3(0, 1.0f, 0.0f), 180.0f);   /// Scene setting is flipped
+        m_impostorObjList[i].transform.LookAt(mainCam.transform);
+        m_impostorObjList[i].transform.Rotate(new Vector3(0, 1.0f, 0.0f), 180.0f);   /// Scene setting is flipped
     }
-    private bool IsHitCacheTex( Vector3 dir, ref int i_cache, ref int j_cache )
+    //
+    // Position Calculation / Update Functions
+    private void FallingObjects()
     {
-        /// determine texture cache hit due to dir vector3
-        /// Calculate x axis angle, y axis angle
-        float angleX = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, dir.y, dir.z));//
-        float angleY = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(dir.x, 0.0f, dir.z));//
-        if (Vector3.Dot(dir, new Vector3(0.0f, 1.0f, 0.0f)) < 0)
-            angleX = -angleX;
-        if (Vector3.Dot(dir, new Vector3(1.0f, 0.0f, 0.0f)) > 0)
-            angleY = -angleY;
-
-        i_cache = 0;
-        j_cache = 0;
-        List<float> border = new List<float>();
-        float minDistX = 9999.0f, minDistY = 9999.0f; ;
-        for (float x_b = -m_cacheAngleMargin; x_b <= m_cacheAngleMargin; x_b += m_cacheAngleRes)
+        /// Moving Objects
+        if (m_FallingObject)
         {
-            border.Add(x_b);
-        }
-        for(int i=0; i<m_slice; i++)
-        { 
-            if (Mathf.Abs(border[i] - angleX) < minDistX)
+            for (int i = 0; i < m_impostorObjList.Count; i++)
             {
-                i_cache = i;
-                minDistX = Mathf.Abs(border[i] - angleX);
+                m_impostorObjList[i].transform.Translate(0.0f, -0.1f, 0.0f);
+                if (m_impostorObjList[i].transform.position.y < 2.8f)
+                    m_impostorObjList[i].transform.position = new Vector3(m_impostorObjList[i].transform.position.x, 10.0f, m_impostorObjList[i].transform.position.z);
             }
         }
-        for (int i = 0; i < m_slice; i++)
-        {
-            if (Mathf.Abs(border[i] - angleY) < minDistY)
-            {
-                j_cache = i;
-                minDistY = Mathf.Abs(border[i] - angleY);
-            }
-        }
-        if (minDistX < m_cacheAngleThrehold && minDistY < m_cacheAngleThrehold)
-            return true;
-        else
-            return false;
     }
     private int GeneratePosition(int _number, positioning _method, ref List<Vector3> _positionList)
     {
@@ -308,9 +254,54 @@ private void Assign()
         }
         return 0;
     }
+    //
+    // test functions
+    private bool IsHitCacheTex(Vector3 dir, ref int i_cache, ref int j_cache)
+    {
+        /// determine texture cache hit due to dir vector3
+        /// Calculate x axis angle, y axis angle
+        float angleX = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, dir.y, dir.z));//
+        float angleY = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(dir.x, 0.0f, dir.z));//
+        if (Vector3.Dot(dir, new Vector3(0.0f, 1.0f, 0.0f)) < 0)
+            angleX = -angleX;
+        if (Vector3.Dot(dir, new Vector3(1.0f, 0.0f, 0.0f)) > 0)
+            angleY = -angleY;
+
+        i_cache = 0;
+        j_cache = 0;
+        float minDistX = 9999.0f, minDistY = 9999.0f; ;
+        for (int i = 0; i < m_slice; i++)
+        {
+            if (Mathf.Abs(m_cacheAngleBorder[i] - angleX) < minDistX)
+            {
+                i_cache = i;
+                minDistX = Mathf.Abs(m_cacheAngleBorder[i] - angleX);
+            }
+        }
+        for (int i = 0; i < m_slice; i++)
+        {
+            if (Mathf.Abs(m_cacheAngleBorder[i] - angleY) < minDistY)
+            {
+                j_cache = i;
+                minDistY = Mathf.Abs(m_cacheAngleBorder[i] - angleY);
+            }
+        }
+        if (minDistX < m_cacheAngleThrehold && minDistY < m_cacheAngleThrehold)
+            return true;
+        else
+            return false;
+    }
+    private bool IsAngleChanged(int i)
+    {
+        m_currCamDir[i] = mainCam.transform.position - m_impostorObjList[i].transform.position;
+        bool ret = (Vector3.Angle(m_currCamDir[i].normalized, m_prevCamDir[i].normalized) > m_angleThrehold);
+        if (ret)
+            m_prevCamDir[i] = m_currCamDir[i];
+        return ret;
+    }
     private bool IsInFrustum( int _index)
     {
         /// Check if _index object is in Frustum
-       return UtilFun.IsRendererInCamera(impostorObjList[_index].GetComponent<Renderer>(), mainCam);
+       return UtilFun.IsRendererInCamera(m_impostorObjList[_index].GetComponent<Renderer>(), mainCam);
     }
 }
