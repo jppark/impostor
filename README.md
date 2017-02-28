@@ -61,22 +61,21 @@ Uniform : uniformly positioned / Random2D : randomly positioned in ground plane 
 
 ## Files Included : 
 * MultiImpostorController.cs : Impostor Controller Class which assigns Multiple TextureManager and update camera position
-* UtilFun.cs : Function implementation for additional utility function
+* UtilFun.cs : Function implementation for additional utility function and parameter setting
 * PrintoutImpostorTexture.cs : Pre-generate cache texture for impostor
 
 ## Usage
 
-1. Texture Generation_(Optional)_ : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location. Please beware that the pre-generation of impostor rendering requires much time.
+1. Texture Generation_(Optional)_ : Turn on the _Printout Texture_ of _GenerateCacheTex.cs_ which is attached to _GenerateCacheTex_ game object. The code will generate _impostorCacheTex.png_ file to the home location. Please beware that the pre-generation of impostor rendering requires much time. Texture cache properties are listed in _UtilFun.cs_ _TextureCacheInfo_ class. Texture Size and Cache range, cache resolution are defined.
 2. Massive Object Rendering : Input the number of objects to rendered in _Object Number_ at _MultiImpostorController_ script and
 choose the positioning method among the Uniform/Random2D/Random3D
-3. Select additional enhancement for the performance and excute it
-* Enhancement Feature : _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_
-  _Adaptive Resolution_ is not applied in runtime(which related to texture assign)
+3. Enhancement Feature Selection : select additional enhancement for the performance and excute it
+ : _Adaptive Resolution / View Angle Update / Frustum Culling / Use Cache_
 
 
 ## Issues
 * Enhancement Efficiency : _Adaptive Resolution_ enhance efficiency significantly and _View Angle Update_ increases performance of impostor rendering. However, _Frustum Culling_ does not shows distinct difference in framerate. That's because unity3D engine does culling algorithm by itself and manual culling does not effects well. 
-* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _3.0_, but it can be increased when you want to get more performance.
+* Cache Resolution : The pre-rendered texture is used for cache of impostor rendering, but there exists popping artifacts when the pre-rendered angle and current angle has difference. I set the angle threhold for caching as _1.0_, but it can be increased when you want to get more performance.
     
 ## Acknowledgements
 * Scene Files from AltspaceVR 
