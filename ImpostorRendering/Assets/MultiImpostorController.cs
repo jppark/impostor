@@ -18,6 +18,8 @@ public class MultiImpostorController : MonoBehaviour {
     private Vector3 m_startingPos = new Vector3(-21.83f, 2.8f, 21.8f);
     private Vector3 m_endPos = new Vector3(33.68f, 2.8f, 21.8f);
     private int m_slice;
+    private int m_rowObjectNum = 30;
+    private float m_fallingSpeed = 0.1f;
 
     [SerializeField]    private GameObject targetObj;
     [SerializeField]    private bool m_AdaptiveResolution = true;
@@ -173,7 +175,6 @@ public class MultiImpostorController : MonoBehaviour {
         {
             // Use texture cache
             SetObjPropertyToTexCache(i, i_cache, j_cache);
-            m_tmList[i].switchRenderedWithCache();
         }
         else
         {
@@ -181,9 +182,7 @@ public class MultiImpostorController : MonoBehaviour {
             m_impostorObjList[i].GetComponent<MeshRenderer>().material.mainTexture = m_tmList[i].GetTexture();
             Vector3 pos = targetObj.transform.position + viewDir;
             m_tmList[i].UpdateTexCam(pos, targetObj.transform);
-            //if(m_tmList[i].IsRenderedWithCache() )
             SetObjPropertyToImpostor(i);
-            m_tmList[i].switchRenderedWithCache();
         }
         m_impostorObjList[i].transform.LookAt(mainCam.transform);
         m_impostorObjList[i].transform.Rotate(new Vector3(0, 1.0f, 0.0f), 180.0f);   /// Scene setting is flipped
@@ -197,7 +196,7 @@ public class MultiImpostorController : MonoBehaviour {
         {
             for (int i = 0; i < m_impostorObjList.Count; i++)
             {
-                m_impostorObjList[i].transform.Translate(0.0f, -0.1f, 0.0f);
+                m_impostorObjList[i].transform.Translate(0.0f, -m_fallingSpeed, 0.0f);
                 if (m_impostorObjList[i].transform.position.y < 2.8f)
                     m_impostorObjList[i].transform.position = new Vector3(m_impostorObjList[i].transform.position.x, 10.0f, m_impostorObjList[i].transform.position.z);
             }
@@ -210,14 +209,13 @@ public class MultiImpostorController : MonoBehaviour {
         {
             case positioning.Uniform:
                 {
-                    int rowNum = 30;
-                    Vector3 x_bias = new Vector3((float)(m_endPos.x - m_startingPos.x) / (float)rowNum, 0.0f, 0.0f);
-                    Vector3 z_bias = new Vector3(0.0f, 0.0f, (float)(m_endPos.x - m_startingPos.x) / (float)rowNum);
+                    Vector3 x_bias = new Vector3((float)(m_endPos.x - m_startingPos.x) / (float)m_rowObjectNum, 0.0f, 0.0f);
+                    Vector3 z_bias = new Vector3(0.0f, 0.0f, (float)(m_endPos.x - m_startingPos.x) / (float)m_rowObjectNum);
 
                     for (int i = 0; i < _number; i++)
                     {
-                        int column = i / rowNum;
-                        int row = i % rowNum;
+                        int column = i / m_rowObjectNum;
+                        int row = i % m_rowObjectNum;
                         _positionList.Add(m_startingPos + x_bias * row + z_bias * column);
                     }
                     return 1;
@@ -260,8 +258,8 @@ public class MultiImpostorController : MonoBehaviour {
     {
         /// determine texture cache hit due to dir vector3
         /// Calculate x axis angle, y axis angle
-        float angleX = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, dir.y, dir.z));//
-        float angleY = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(dir.x, 0.0f, dir.z));//
+        float angleX = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, dir.y, dir.z));
+        float angleY = Vector3.Angle(new Vector3(0.0f, 0.0f, -1.0f), new Vector3(dir.x, 0.0f, dir.z));
         if (Vector3.Dot(dir, new Vector3(0.0f, 1.0f, 0.0f)) < 0)
             angleX = -angleX;
         if (Vector3.Dot(dir, new Vector3(1.0f, 0.0f, 0.0f)) > 0)
@@ -293,6 +291,7 @@ public class MultiImpostorController : MonoBehaviour {
     }
     private bool IsAngleChanged(int i)
     {
+        /// Check if view angle change is exceed threshold
         m_currCamDir[i] = mainCam.transform.position - m_impostorObjList[i].transform.position;
         bool ret = (Vector3.Angle(m_currCamDir[i].normalized, m_prevCamDir[i].normalized) > m_angleThrehold);
         if (ret)

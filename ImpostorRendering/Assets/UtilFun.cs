@@ -8,7 +8,7 @@ enum positioning
 };
 public static class TextureCacheInfo
 {
-    public static int textureSize = 400;
+    public static int textureSize = 300;
     public static float cacheAngleScope = 40.0f;
     public static float cacheAngleRes = 4.0f;
 }

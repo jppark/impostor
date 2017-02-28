@@ -72,7 +72,7 @@ public class ImpostorController : MonoBehaviour {
     private void UpdateTexCamera()
     {
         /// Update Texture Camera Pos/Ort
-        Vector3 pos = targetDrawObj.transform.position + (m_mainCam.transform.position - transform.position).normalized;
+        Vector3 pos = targetDrawObj.transform.position + (m_mainCam.transform.position - transform.position).normalized*1.0f;
         m_tm.UpdateTexCam(pos, targetDrawObj.transform);
         m_tm.Render();
     }

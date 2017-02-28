@@ -7,7 +7,6 @@ using UnityEngine;
 public class TextureManager {
     private RenderTexture m_texBuffer;
     private Camera m_textureCam; //
-    private bool m_bDrawCache;
 
     public TextureManager( int _size, ref Camera _refCam, int _targetObjLayer )
     {
@@ -22,8 +21,6 @@ public class TextureManager {
         m_textureCam.clearFlags = CameraClearFlags.SolidColor;
         m_textureCam.backgroundColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
         m_textureCam.cullingMask = 1 << _targetObjLayer;
-
-        m_bDrawCache = false;
     }
     public void UpdateTexCam( Vector3 _pos, Transform _target )
     {
@@ -40,6 +37,4 @@ public class TextureManager {
         m_textureCam.Render();
     }
     public RenderTexture GetTexture()    { return m_texBuffer; }
-    public void switchRenderedWithCache() { m_bDrawCache = !m_bDrawCache; }
-    public bool IsRenderedWithCache() { return m_bDrawCache; }
 }
